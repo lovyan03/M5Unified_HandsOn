@@ -11,9 +11,9 @@ auto &dsp = M5.Display;
 // 操作対象のボタンを変更したい場合はここの記述を変更する。
 auto &btn = M5.BtnA;
 
-// CoreInk,Core2,CoreS3,Tough,StickC/CPlus の場合はBtnPWRも使用できる。
+// CoreInk,Core2,CoreS3,Tough,StickC/CPlus の場合は M5.BtnPWR で電源ボタンも使用できる。
 // auto &btn = M5.BtnPWR;
-// ※ 但しCoreInk以外の機種のBtnPWRについては、電源管理ICがボタンを管理しており、
+// ※ 但しCoreInk以外の機種の BtnPWR については、電源管理ICがボタンを管理しており、
 //    使える機能は2つ wasClick / wasHold のみに限定される。
 
 void setup(void)
