@@ -36,8 +36,9 @@ https://docs.m5stack.com/ja/quick_start/m5unified/intro_vscode
 
 ---
 
- - [画面描画のサンプルコード1](sample_code/Display1.cpp)
- - [画面描画のサンプルコード2](sample_code/Display2.cpp)
  - [ボタンのサンプルコード1](sample_code/Button1.cpp)
  - [ボタンのサンプルコード2](sample_code/Button2.cpp)
+ - [画面描画のサンプルコード1](sample_code/Display1.cpp)
+ - [画面描画のサンプルコード2](sample_code/Display2.cpp)
+ - [スピーカーのサンプルコード1](sample_code/Speaker1.cpp)
 
