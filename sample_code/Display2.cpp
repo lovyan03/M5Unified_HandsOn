@@ -1,8 +1,8 @@
-// #include <M5UnitRCA.h>      // UnitRCA を使う場合これを追加
-// #include <M5UnitLCD.h>      // UnitLCD を使う場合これを追加
-// #include <M5UnitOLED.h>     // UnitOLED を使う場合これを追加
-// #include <M5UnitGLASS.h>    // UnitGLASS を使う場合これを追加
-// #include <M5AtomDisplay.h>  // AtomDisplay を使う場合これを追加
+// #include <M5UnitRCA.h>      /// UnitRCA を使う場合これを追加
+// #include <M5UnitLCD.h>      /// UnitLCD を使う場合これを追加
+// #include <M5UnitOLED.h>     /// UnitOLED を使う場合これを追加
+// #include <M5UnitGLASS.h>    /// UnitGLASS を使う場合これを追加
+// #include <M5AtomDisplay.h>  /// AtomDisplay を使う場合これを追加
 
 #include <M5Unified.h>
 
@@ -10,15 +10,15 @@ void step();
 
 void setup()
 {
-  auto cfg = M5.config(); // 設定用の構造体を取得。
-//cfg.external_speaker.hat_spk = true;    // HAT SPK  を使う場合これを追加
-//cfg.external_speaker.hat_spk2 = true;   // HAT SPK2 を使う場合これを追加
-//cfg.external_speaker.atomic_spk = true; // ATOM SPK を使う場合これを追加
+  auto cfg = M5.config(); /// 設定用の構造体を取得。
+//cfg.external_speaker.hat_spk = true;    /// HAT SPK  を使う場合これを追加
+//cfg.external_speaker.hat_spk2 = true;   /// HAT SPK2 を使う場合これを追加
+//cfg.external_speaker.atomic_spk = true; /// ATOM SPK を使う場合これを追加
 
-// 最初にbeginを実行します。M5Unifiedの準備に必ず必要です。
+  /// 最初にbeginを実行します。M5Unifiedの準備に必ず必要です。
   M5.begin(cfg);
 
-  // 実験用の関数を実行する。
+  /// 実験用の関数を実行する。
   step();
 }
 
@@ -27,14 +27,14 @@ void loop(void)
   delay(1);
   M5.update();
 
-  // ボタンA,電源ボタン,画面のいずれかをクリックする度に実験用の関数を実行する。
-  if (M5.BtnA.wasClicked() || M5.BtnPWR.wasClicked() || M5.Touch.getDetail().wasClicked())
+  /// ボタンA,ボタンB,電源ボタン,画面のいずれかをクリックする度に実験用の関数を実行する。
+  if (M5.BtnA.wasClicked() || M5.BtnB.wasClicked() || M5.BtnPWR.wasClicked() || M5.Touch.getDetail().wasClicked())
   {
     step();
   }
 }
 
-// 実験用の関数群
+/// 実験用の関数群
 void step1();
 void step2();
 void step3();

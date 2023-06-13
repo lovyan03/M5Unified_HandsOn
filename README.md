@@ -36,6 +36,16 @@ https://docs.m5stack.com/ja/quick_start/m5unified/intro_vscode
 
 ---
 
+## 他のサンプルを試すには
+
+このリポジトリの [sample_code](sample_code/) フォルダに、他のサンプルコードをいくつか用意しています。
+
+ - 試したいファイルを開き、中のソースコードを全選択・クリップボードにコピー。
+ - src フォルダの main.cpp を開き、全選択・貼り付けしてまるごと上書きする。
+
+ファイルが増えたり名前が変わった場合、ビルド時間が大幅に伸びるので、このようにします。<br>
+main.cpp を書き換えただけなら、再ビルド対象が main.cpp のみで済み、時間を短縮できます。
+
  - [ボタンのサンプルコード1](sample_code/Button1.cpp)
  - [ボタンのサンプルコード2](sample_code/Button2.cpp)
  - [画面描画のサンプルコード1](sample_code/Display1.cpp)

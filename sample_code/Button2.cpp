@@ -60,13 +60,20 @@ void loop(void)
   /// 1回クリック時
   if (btn.wasSingleClicked())
   {
+    M5_LOGI("wasSingleClicked");
+
+    /// 音を鳴らす
     spk.tone(500, 500, 0);
+
+    /// 画面の色を黄色にする
     dsp.fillScreen(TFT_YELLOW);
   }
 
   /// 2回クリック時
   if (btn.wasDoubleClicked())
   {
+    M5_LOGI("wasDoubleClicked");
+
     spk.tone(1500, 500, 0);
     dsp.fillScreen(TFT_BLUE);
   }
@@ -74,23 +81,25 @@ void loop(void)
   /// 長押し状態になった時
   if (btn.wasHold())
   {
-    dsp.fillScreen(TFT_BLACK);
+    M5_LOGI("wasHold   getClickCount:%d", btn.getClickCount());
+
+    dsp.fillScreen((btn.getClickCount() & 1) ? TFT_BLACK : TFT_WHITE);
   }
 
   /// 長押し中
   if (btn.isHolding())
   {
     static int Hz = 1000;
-    /// 長押し前に単押しを何回していたか分岐
-    switch (btn.getClickCount())
-    {
-    case 0: /// 普通に長押しを始めた場合
-      if (Hz < 10000) { Hz += 1;} /// 音程を上げる
-      break;
 
-    default: /// 1回以上 短押し後に長押しを始めた場合
-      if (Hz > 10) { Hz -= 1; }  /// 音程を下げる
-      break;
+    int click_count = btn.getClickCount();
+    /// 長押し直前の単押しの連続回数によって分岐
+    if (click_count & 1) // 回数が奇数の場合
+    {
+      if (Hz > 10) { Hz -= (click_count + 2) >> 1; }  /// 音程を下げる
+    }
+    else /// 回数が偶数の場合
+    {
+      if (Hz < 10000) { Hz += (click_count + 2) >> 1;} /// 音程を上げる
     }
     spk.tone(Hz, 500, 0);
   }
