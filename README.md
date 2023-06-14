@@ -48,7 +48,8 @@ main.cpp を書き換えただけなら、再ビルド対象が main.cpp のみ�
 
  - [ボタンのサンプルコード1](sample_code/Button1.cpp)
  - [ボタンのサンプルコード2](sample_code/Button2.cpp)
+ - [スピーカーのサンプルコード1](sample_code/Speaker1.cpp)
  - [画面描画のサンプルコード1](sample_code/Display1.cpp)
  - [画面描画のサンプルコード2](sample_code/Display2.cpp)
- - [スピーカーのサンプルコード1](sample_code/Speaker1.cpp)
+ - [画面描画のサンプルコード3](sample_code/Display3.cpp)
 

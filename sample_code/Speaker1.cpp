@@ -1,40 +1,88 @@
-// #include <M5UnitRCA.h>      // UnitRCA を使う場合これを追加
-// #include <M5UnitLCD.h>      // UnitLCD を使う場合これを追加
-// #include <M5UnitOLED.h>     // UnitOLED を使う場合これを追加
-// #include <M5UnitGLASS.h>    // UnitGLASS を使う場合これを追加
-// #include <M5AtomDisplay.h>  // AtomDisplay を使う場合これを追加
+// #include <M5UnitRCA.h>      /// UnitRCA を使う場合、これを追加する。
+// #include <M5UnitLCD.h>      /// UnitLCD を使う場合、これを追加する。
+// #include <M5UnitOLED.h>     /// UnitOLED を使う場合、これを追加する。
+// #include <M5UnitGLASS.h>    /// UnitGLASS を使う場合、これを追加する。
+// #include <M5AtomDisplay.h>  /// AtomDisplay を使う場合、これを追加する。
 
 #include <M5Unified.h>
 
-void step();
+void step(int add = 0);
 
 void setup()
 {
-  auto cfg = M5.config(); // 設定用の構造体を取得。
-//cfg.external_speaker.hat_spk = true;    // HAT SPK  を使う場合これを追加
-//cfg.external_speaker.hat_spk2 = true;   // HAT SPK2 を使う場合これを追加
-//cfg.external_speaker.atomic_spk = true; // ATOM SPK を使う場合これを追加
+  /// 設定用の構造体を取得。
+  auto cfg = M5.config();
+//cfg.external_speaker.hat_spk = true;    /// HAT SPK  を使う場合、これを追加する。
+//cfg.external_speaker.hat_spk2 = true;   /// HAT SPK2 を使う場合、これを追加する。
+//cfg.external_speaker.atomic_spk = true; /// ATOM SPK を使う場合、これを追加する。
 
-// 最初にbeginを実行します。M5Unifiedの準備に必ず必要です。
+  /// M5Unifiedを使用する準備をする。
   M5.begin(cfg);
 
-  // 実験用の関数を実行する。
+  /// 電子ペーパの場合は描画がはやいモードに変更する。
+  M5.Display.setEpdMode(m5gfx::epd_fast);
+
+  /// ボタンの長押し判定の時間 (初期値500) を変更したい場合はこの関数で設定する。
+// M5.BtnA.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
+// M5.BtnPWR.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
+
+  /// startWriteにはディスプレイに通信バスを占有させ、描画時間を短縮する効果がある。
+  /// 電子ペーパやOLEDモデルの場合、dsp.display(); を呼出すまで通信が保留される。
+  /// ※ 本来は endWriteと対で使う関数だが、本サンプルでは常時占有したままとする。
+  M5.Display.startWrite();
+
+  /// 実験用の関数を実行する。
   step();
 }
 
 void loop(void)
 {
-  delay(1);
+  /// 操作内容に応じて変更する変数。
+  /// 実験用の関数の実行順序に影響する。 1=次に進む / -1=前に戻る / 0=もう一度。
+  int add = 0;
+
+  /// ボタン操作・タッチ操作の状態を更新する。
   M5.update();
 
-  // ボタンA,ボタンB,電源ボタン,画面のいずれかをクリックする度に実験用の関数を実行する。
-  if (M5.BtnA.wasClicked() || M5.BtnB.wasClicked() || M5.BtnPWR.wasClicked() || M5.Touch.getDetail().wasClicked())
-  {
-    step();
+  /// タッチ操作の情報を取得する。
+  auto touch_detail = M5.Touch.getDetail();
+
+  if (touch_detail.wasClicked() && touch_detail.base_y < M5.Display.height())
+  { /// タッチ画面がクリックされた？
+    /// 画面の左・中央・右のどのエリアがクリックされたかに応じて変更する。
+    add = 1 - (M5.Touch.getDetail().x * 3 / M5.Display.width());
+    /// 操作された場所が…
+    ///  右側 = -1 = 前に戻る。
+    ///  中央 =  0 = もう一度。
+    ///  左側 =  1 = 次に進む。
   }
+  else if (M5.BtnA.wasSingleClicked() || M5.BtnPWR.wasSingleClicked())
+  { /// ボタンAか電源ボタンが1度クリックされた？
+    /// 次の実験用の関数に進む。
+    add = 1;
+  }
+  else if (M5.BtnA.wasDoubleClicked() || M5.BtnPWR.wasDoubleClicked() || M5.BtnC.wasClicked())
+  { /// ボタンAか電源ボタンが2度クリックされた または ボタンCがクリックされた？
+    /// 前の実験用の関数に戻る。
+    add = -1;
+  }
+  else if (M5.BtnA.wasHold() || M5.BtnPWR.wasHold() || M5.BtnB.wasClicked())
+  { /// ボタンAか電源ボタンが長押しされた または ボタンBがクリックされた？
+    /// 同じ実験用の関数をもう一度。
+    add = 0;
+  }
+  else
+  { /// どの操作もされていなければ終了。
+    delay(1);
+    return;
+  }
+
+  /// 操作に応じて実験用の関数を試す。
+  step(add);
 }
 
-// 実験用の関数群
+/// 実験用の関数群
+void step0();
 void step1();
 void step2();
 void step3();
@@ -42,27 +90,27 @@ void step4();
 void step5();
 void step6();
 
-void step()
+void step(int add)
 {
-  static int step = 1;
+  static int step = 0;
 
-  M5_LOGI("step:%d", step);
-  // 操作音を鳴らす。
-  M5.Speaker.tone(1000, 30);
+  /// 引数の指示に応じて実験関数の番号を変更する。
+  step += add;
+  if (step < 0) { step = 6; }
+  if (step > 6) { step = 0; }
 
-  // 画面描画を高速化するおまじない
-  M5.Display.startWrite();
+  /// 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
+  M5.Display.fillScreen(M5.Display.isEPD() ? TFT_WHITE : TFT_BLACK);
 
-  // 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
-  M5.Display.clear();
-  M5.Display.setCursor(0, 0);
+  M5.Display.setCursor(0,0);
+  M5.Display.printf("step:%d", step);
 
-  M5.Display.printf("step:%d ", step);
-
-  // 実験用の関数を順番に試す。
+  uint32_t msec = millis();
+  /// 実験用の関数を順番に試す。
   switch (step)
   {
-  default: step = 1;
+  default:
+  case 0: step0(); break;
   case 1: step1(); break;
   case 2: step2(); break;
   case 3: step3(); break;
@@ -70,93 +118,102 @@ void step()
   case 5: step5(); break;
   case 6: step6(); break;
   }
+  msec = millis() - msec;
 
-  M5_LOGI("done.");
-  M5.Display.println(": done");
+  M5_LOGI("step:%d   %d msec", step, msec);
+}
 
-  // startWriteと対でendWriteを使う。
-  // UnitOLEDや電子ペーパーの場合はここで画面に反映される。
-  M5.Display.endWrite();
+void step0()
+{
+  /// 880Hzの音を鳴らす。
+  M5.Speaker.tone(880, 400);
+  /// 引数1 : 周波数
+  /// 引数2 : 音の長さ [ミリ秒]
 
-  step += 1;
+  /// シリアルモニタに出力される実行時間を確認してみると、
+  /// 400ミリ秒の再生にも関わらずstep0の実行時間は一瞬で終了している。
+  /// これはtone関数はバックグラウンドで音を再生する仕組みになっているため、
+  /// 音の再生が終わるのを待たずに先の処理に進むことができる。
 }
 
 void step1()
 {
-// ド・ミ・ソ を順に鳴らす
+  /// ド・ミ・ソ を同時に鳴らす。
   M5.Speaker.tone(523.251, 400);  // ドの音
-  delay(400);
   M5.Speaker.tone(659.255, 400);  // ミの音
-  delay(400);
   M5.Speaker.tone(783.991, 400);  // ソの音
 
-// tone関数の引数1が周波数、引数2が音の長さをミリ秒で指定します。
-// toneにて400ミリ秒鳴らし delay関数で同じく400ミリ秒待機させるので、
-// 結果として３つの音は順番に鳴ります。
+  /// このように連続で呼び出した場合は同時に再生され、和音になる。
+
+  /// 厳密には、最大8音まで重ねる事ができる「仮想チャンネル」という概念があり
+  /// 引数3 にて0~7を指定し、8個のうち どのチャンネルを使用するかを設定できるようになっている。
+  /// 引数3 を省略または -1 を指定した場合、空いている仮想チャンネルが自動的に割り当てられる。
+  /// この例では 引数3を省略しているため、3つのtone関数は別の仮想チャンネルが割当てられている。
 }
 
 void step2()
 {
-// ド・ミ・ソ を重ねて鳴らす
-  M5.Speaker.tone(523.251, 1000);  // ドの音
-  delay(400);
-  M5.Speaker.tone(659.255, 1000);  // ミの音
-  delay(400);
-  M5.Speaker.tone(783.991, 1000);  // ソの音
+  /// ド・ミ・ソ を順に鳴らす。
+  M5.Speaker.tone(523.251, 400, 0, true);  // ドの音
+  M5.Speaker.tone(659.255, 400, 0, false);  // ミの音
+  M5.Speaker.tone(783.991, 400, 0, false);  // ソの音
 
-// step1と比べて、各tone関数の引数2が1000ミリ秒に増えています。
-// 一方、delay関数の待機時間は400ミリ秒のままです。
-// つまり前の音がまだ鳴っている時に次のtone関数が実行されます。
-// この場合は、音が合成されて鳴ります。
+  /// 引数3 : 仮想チャンネル番号
+  /// 引数4 : true=再生中の音を止めて即座に再生を開始する / false=鳴り終わるのを待機する / 省略時はtrue。
 
-// M5UnifiedのSpeakerには仮想的な8個のチャンネルがあり、同時に8音まで重ねて出力できます。
-// どのチャンネルを使用するかはtone関数の引数3にて、 0~7から選択できます。
-// 省略時や -1 を指定した場合は、未使用のチャンネルから自動的に選ばれます。
-// 上記の例では引数3は省略されているため、未使用チャンネルが割当てられて、重ねて出力されます。
+  /// 前の例と比べて引数3と4の指定が追加されている。
+  /// 仮想チャンネル0番を使用し、前の音が鳴り終わるのを待つ設定となっている。
+  /// このため、この3つのtone関数の音は重なったり中断されたりせずに、順番に鳴る。
+
+  /// 各仮想チャンネルには再生を待機できるキューがひとつだけ用意されている。
+  /// この例では以下のような状況が発生する。
+  /// 1つ目のtone : 即座に再生され、キューには積まれない。
+  /// 2つ目のtone : 前のtoneが再生中なので、再生待ちキューに積まれる。
+  /// 3つ目のtone : 再生待ちキューが使用中なので、キューが空くまで待機する。
+  /// このような状況になるため、この例では実行時間が約400msecほどかかることになる。
 }
 
 void step3()
 {
-// ド・ミ・ソ を順に、前の音を止めて鳴らす
+  /// ド・ミ・ソ を重ねて順に鳴らす
   M5.Speaker.tone(523.251, 1000, 0);  // ドの音
-  delay(400);
-  M5.Speaker.tone(659.255, 1000, 0);  // ミの音
-  delay(400);
-  M5.Speaker.tone(783.991, 1000, 0);  // ソの音
+  delay(200);
+  M5.Speaker.tone(659.255, 1000, 1);  // ミの音
+  delay(200);
+  M5.Speaker.tone(783.991, 1000, 2);  // ソの音
 
-// step2と比べて、各tone関数の引数3に0の指定が追加されています。
-// この場合、各tone関数はすべて同じチャンネル0番を使用します。
-// 前の音が鳴り終わる前に次のtone関数が実行されます。
-// この場合の動作は、再生中の音が停止され、次の音が鳴り始めます。
-// 具体的には、ドの音が1000ミリ秒鳴らす予定だったところを、
-// 400ミリ秒経過した時点で次のミの音の再生指示が行われるわけです。
-// チャンネル0番でミの音を鳴らそうとしますが、このチャンネルはドの音がまだ鳴っています。
-// このとき、ドの音の出力は中断されて、即座にミの音が鳴り始めます。
-
-// 一番最初のサンプル (400ミリ秒鳴らして400ミリ秒delayする)のと比べて、
-// 音の切り替わりが滑らかに繋がっていることを聞き比べてみてください。
+  /// 音を重ねつつ、タイミングをずらして順番に鳴らしたい場合は、待機処理を追加する。
+  /// この例では 200ミリ秒ずつタイミングをずらして和音が鳴る。
 }
 
 void step4()
 {
-// ド・ミ・ソ を順に、前の音が鳴り終わるのを待ってから鳴らす
-  M5.Speaker.tone(523.251, 1000, 0, false);  // ドの音
-  M5.Speaker.tone(659.255, 1000, 0, false);  // ミの音
-  M5.Speaker.tone(783.991, 1000, 0, false);  // ソの音
+  /// ド・ミ・ソ を順に、前の音を止めて鳴らす
+  M5.Speaker.tone(523.251, 1000, 0);  // ドの音
+  delay(200);
+  M5.Speaker.tone(659.255, 1000, 0);  // ミの音
+  delay(200);
+  M5.Speaker.tone(783.991, 1000, 0);  // ソの音
 
-// step3と比べて、各tone関数の引数4にfalseの指定が追加されています。
-// 引数4は、今鳴っている音の扱いを選択できます。「true=即座に停止」「false=鳴り終わりを待機」
-// 省略時はtrueです。前のサンプルでは 引数4は省略され true が指定されたのと同じ状態だったのです。
-// また、各tone関数の間にあった delay がありません。
-
-// 一番最初のサンプル (400ミリ秒鳴らして400ミリ秒delayする)のと比べて、
-// 音の切り替わりが滑らかに繋がっていることを聞き比べてみてください。
+  /// step3では各tone関数が異なる仮想チャンネルを指定していたのに対し、
+  /// この例は全て同じ仮想チャンネルを指定している。
+  /// 前の音が鳴り終わる前に次のtone関数が実行されるため、
+  /// 再生中の音を停止して次の音が鳴り始める。
 }
 
 void step5()
 {
+  /// ピポッ
+  M5.Speaker.tone(2000, 100, 0, true);
+  M5.Speaker.tone(1000, 100, 0, false);
 }
 
 void step6()
 {
+  /// 音階
+  for (int i = 0; i < 60; ++i)
+  {
+    float Hz = 220 * powf(2.0, i / 12.0f);
+    M5.Speaker.tone(Hz, 50, 0, false);
+  }
 }
