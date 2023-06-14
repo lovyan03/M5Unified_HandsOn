@@ -1,8 +1,8 @@
-// #include <M5UnitRCA.h>      /// UnitRCA を使う場合これを追加
-// #include <M5UnitLCD.h>      /// UnitLCD を使う場合これを追加
-// #include <M5UnitOLED.h>     /// UnitOLED を使う場合これを追加
-// #include <M5UnitGLASS.h>    /// UnitGLASS を使う場合これを追加
-// #include <M5AtomDisplay.h>  /// AtomDisplay を使う場合これを追加
+// #include <M5UnitRCA.h>      /// UnitRCA を使う場合、これを追加する。
+// #include <M5UnitLCD.h>      /// UnitLCD を使う場合、これを追加する。
+// #include <M5UnitOLED.h>     /// UnitOLED を使う場合、これを追加する。
+// #include <M5UnitGLASS.h>    /// UnitGLASS を使う場合、これを追加する。
+// #include <M5AtomDisplay.h>  /// AtomDisplay を使う場合、これを追加する。
 
 #include <M5Unified.h>
 
@@ -10,20 +10,21 @@ void step(int add = 0);
 
 void setup()
 {
-  auto cfg = M5.config(); /// 設定用の構造体を取得。
-//cfg.external_speaker.hat_spk = true;    /// HAT SPK  を使う場合これを追加
-//cfg.external_speaker.hat_spk2 = true;   /// HAT SPK2 を使う場合これを追加
-//cfg.external_speaker.atomic_spk = true; /// ATOM SPK を使う場合これを追加
+  /// 設定用の構造体を取得。
+  auto cfg = M5.config();
+//cfg.external_speaker.hat_spk = true;    /// HAT SPK  を使う場合、これを追加する。
+//cfg.external_speaker.hat_spk2 = true;   /// HAT SPK2 を使う場合、これを追加する。
+//cfg.external_speaker.atomic_spk = true; /// ATOM SPK を使う場合、これを追加する。
 
-  /// 最初にbeginを実行する。M5Unifiedの準備に必ず必要。
+  /// M5Unifiedを使用する準備をする。
   M5.begin(cfg);
 
-  /// ボタンの長押し判定の時間 (初期値500) を変更したい場合はこの関数で設定する。
-  M5.BtnA.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
-  M5.BtnPWR.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
+  /// 電子ペーパの場合は描画がはやいモードに変更する。
+  M5.Display.setEpdMode(m5gfx::epd_fast);
 
-  /// 電子ペーパの場合は描画速度が最も速いモードに変更する。
-  M5.Display.setEpdMode(m5gfx::epd_fastest);
+  /// ボタンの長押し判定の時間 (初期値500) を変更したい場合はこの関数で設定する。
+// M5.BtnA.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
+// M5.BtnPWR.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
 
   /// 実験用の関数を実行する。
   step();
@@ -84,6 +85,7 @@ void step3();
 void step4();
 void step5();
 void step6();
+void step7();
 
 void step(int add)
 {
@@ -108,8 +110,10 @@ void step(int add)
   case 2: step2(); break;
   case 3: step3(); break;
   case 4: step4(); break;
-  case -1: step = 5;
   case 5: step5(); break;
+  case 6: step6(); break;
+  case -1: step = 7;
+  case 7: step7(); break;
   }
 
   M5_LOGI("step:%d", step);
@@ -172,31 +176,82 @@ void step3()
 
 void step4()
 {
-  int y = 5;
-  for (int i = 1; i < 10; ++i)
-  { /// 文字の大きさを変更する。
-    M5.Display.setTextSize(i);
-    /// drawString関数でテキストを出力する。
-    /// drawStringはカーソルの影響を受けず、指定した座標に表示される。
-    M5.Display.drawString("hello", 0, y);
-    y += M5.Display.fontHeight();
-  }
+  /// M5Stackの画面の中央に円を描いてみる。
+  /// M5Stackの画面サイズは 320 x 240 なので、
+  /// 中心座標 160,120 に半径120の円を描く。
+  M5.Display.fillCircle(160, 120, 120, TFT_YELLOW);
 }
 
 void step5()
 {
-  /// 画面端でのテキストの折り返しを無効にする。
-  M5.Display.setTextWrap(false);
+  /// step4の方法では、画面サイズが320x240の機種でしか中心に描画されない。
+  /// step5では画面の大きさに基づいて中央に円を描いてみる。
 
-  /// テキストのカーソル位置を左上に設定。
-  M5.Display.setCursor(0, 0);
+  /// 画面幅 width の半分を x座標とする。
+  int x = M5.Display.width() / 2;
 
-  for (int i = 1; i < 10; ++i)
-  { /// 文字の大きさを変更する。
-    M5.Display.setTextSize(i);
+  /// 画面高さ height の半分を y座標とする。
+  int y = M5.Display.height() / 2;
 
-    /// printf関数でテキストを出力する。
-    /// 最後に \n 改行があるので、カーソル位置が次の行の左端に移動する。
-    M5.Display.printf("size%d\n", i);
+  /// 円の半径は xとyの小さい方に合わせる。
+  int r = x < y ? x : y;
+
+  M5.Display.fillCircle(x, y, r, TFT_GREEN);
+}
+
+void step6()
+{
+  /// 画面を左右半分に分けて、左右に別の内容を描く。
+  int wid = M5.Display.width() / 2;
+  int hei = M5.Display.height();
+
+  { /// 左半分の描画
+    int x = wid / 2;
+    int y = hei / 2;
+    int r = x < y ? x : y;
+    M5.Display.fillCircle(x, y, r, TFT_YELLOW);
+  }
+
+  { /// 右半分の描画
+    int x = wid / 2;
+    int y = hei / 2;
+    int r = x < y ? x : y;
+    M5.Display.fillCircle(x + wid, y, r, TFT_BLUE);
+  }
+}
+
+void step7()
+{
+  /// step6の方法では、画面サイズが縦長の場合、縦に細長い領域に分割されてしまう。
+  /// step7では画面の大きさに基づいて、なるべく正方形に近い領域に分割する。
+
+  int wid = M5.Display.width();
+  int hei = M5.Display.height();
+  int area2_x = 0;
+  int area2_y = 0;
+
+  if (wid < hei)
+  { /// 画面が縦に長い場合は上下に分割する。
+    hei = hei / 2;
+    area2_y = hei;
+  }
+  else
+  { /// 正方形または横に長い場合は左右に分割する。
+    wid = wid / 2;
+    area2_x = wid;
+  }
+
+  { /// 左半分(または上半分)の描画
+    int x = wid / 2;
+    int y = hei / 2;
+    int r = x < y ? x : y;
+    M5.Display.fillCircle(x, y, r, TFT_RED);
+  }
+
+  { /// 右半分(または下半分)の描画
+    int x = wid / 2;
+    int y = hei / 2;
+    int r = x < y ? x : y;
+    M5.Display.fillCircle(x + area2_x, y + area2_y, r, TFT_CYAN);
   }
 }

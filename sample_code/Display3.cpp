@@ -8,6 +8,9 @@
 
 void step(int add = 0);
 
+M5Canvas canvas[2];
+int canvas_index = 0;
+
 void setup()
 {
   /// 設定用の構造体を取得。
@@ -19,12 +22,18 @@ void setup()
   /// M5Unifiedを使用する準備をする。
   M5.begin(cfg);
 
-  /// 電子ペーパの場合は描画速度が最も速いモードに変更する。
-  M5.Display.setEpdMode(m5gfx::epd_fastest);
+  /// 電子ペーパの場合は描画がはやいモードに変更する。
+  M5.Display.setEpdMode(m5gfx::epd_fast);
 
   /// ボタンの長押し判定の時間 (初期値500) を変更したい場合はこの関数で設定する。
 // M5.BtnA.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
 // M5.BtnPWR.setHoldThresh(300); // 判定時間を300ミリ秒に変更。
+
+  for (int i = 0; i < 2; ++i)
+  {
+    canvas[i].setPsram(false);
+    canvas[i].createSprite(M5.Display.width(), 40);
+  }
 
   /// 実験用の関数を実行する。
   step();
@@ -32,8 +41,6 @@ void setup()
 
 void loop(void)
 {
-  delay(10);
-
   /// 操作内容に応じて変更する変数。
   /// 実験用の関数の実行順序に影響する。 1=次に進む / -1=前に戻る / 0=もう一度。
   int add = 0;
@@ -70,6 +77,7 @@ void loop(void)
   }
   else
   { /// どの操作もされていなければ終了。
+    delay(1);
     return;
   }
 
@@ -82,9 +90,6 @@ void step0();
 void step1();
 void step2();
 void step3();
-void step4();
-void step5();
-void step6();
 
 void step(int add)
 {
@@ -92,65 +97,98 @@ void step(int add)
 
   /// 引数の指示に応じて実験関数の番号を変更する。
   step += add;
-
-  /// 画面描画を高速化するおまじない…。
-  /// 描画を終える時に endWrite(); を呼出す。
-  M5.Display.startWrite();
-
-  /// 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
-  M5.Display.fillScreen(M5.Display.isEPD() ? TFT_WHITE : TFT_BLACK);
-
-  /// 実験用の関数を順番に試す。
-  switch (step)
-  {
-  default: step = 0;
-  case 0: step0(); break;
-  case 1: step1(); break;
-  case 2: step2(); break;
-  case 3: step3(); break;
-  case 4: step4(); break;
-  case -1: step = 5;
-  case 5: step5(); break;
-  }
-
-  M5_LOGI("step:%d", step);
+  if (step < 0) { step = 3; }
+  if (step > 3) { step = 0; }
 
   /// 操作音を鳴らす。
   float Hz = 880 * powf(2.0, step / 12.0f);
   M5.Speaker.tone(Hz, 50);
 
-  /// startWriteと対でendWriteを使う。
-  /// UnitOLEDや電子ペーパーの場合はここで画面に反映される。
+  /// 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
+  M5.Display.fillScreen(M5.Display.isEPD() ? TFT_WHITE : TFT_BLACK);
+
+  uint32_t msec = millis();
+  /// 実験用の関数を順番に試す。
+  switch (step)
+  {
+  default:
+  case 0: step0(); break;
+  case 1: step1(); break;
+  case 2: step2(); break;
+  case 3: step3(); break;
+  }
+  msec = millis() - msec;
+
+  M5_LOGI("step:%d   %d msec", step, msec);
+}
+
+void step0()
+{
+  int x_count = M5.Display.width() / (M5.Display.isEPD() ? 66 : 2);
+  int y_count = M5.Display.height() / (M5.Display.isEPD() ? 66 : 2);
+
+  int base_color = rand();
+
+  for (int i = 0; i < y_count; ++i)
+  {
+    int y = i * M5.Display.height() / y_count;
+    int h = (i+1) * M5.Display.height() / y_count - y;
+    for (int j = 0; j < x_count; ++j)
+    {
+      int x = j * M5.Display.width() / x_count;
+      int w = (j+1) * M5.Display.width() / x_count - x;
+      uint32_t color = ((base_color + (i << 3)) & 0x0000FF)
+                     +  (base_color +((i+j)<<10)& 0x00FF00)
+                     +  (base_color + (j << 18) & 0xFF0000);
+      M5.Display.fillRect(x, y, w, h, color);
+    }
+  }
+}
+
+void step1()
+{
+  M5.Display.startWrite();
+  step0();
   M5.Display.endWrite();
 }
 
-void step4()
+void step2()
 {
-  int y = 5;
-  for (int i = 1; i < 10; ++i)
-  { /// 文字の大きさを変更する。
-    M5.Display.setTextSize(i);
-    /// drawString関数でテキストを出力する。
-    /// drawStringはカーソルの影響を受けず、指定した座標に表示される。
-    M5.Display.drawString("hello", 0, y);
-    y += M5.Display.fontHeight();
-  }
+  int x_count = M5.Display.width() / (M5.Display.isEPD() ? 66 : 2);
+  int y_count = M5.Display.height() / (M5.Display.isEPD() ? 66 : 2);
+
+  int base_color = rand();
+
+  int y_pos = 0;
+  do
+  {
+    int i_start = y_pos * y_count / M5.Display.height();
+    int i_end   = (y_pos+canvas[canvas_index].height()) * y_count / M5.Display.height();
+
+    for (int i = i_start; i <= i_end; ++i)
+    {
+      int y = i * M5.Display.height() / y_count;
+      int h = (i+1) * M5.Display.height() / y_count - y;
+      for (int j = 0; j < x_count; ++j)
+      {
+        int x = j * M5.Display.width() / x_count;
+        int w = (j+1) * M5.Display.width() / x_count - x;
+
+        uint32_t color = ((base_color + (i << 3)) & 0x0000FF)
+                       +  (base_color +((i+j)<<10)& 0x00FF00)
+                       +  (base_color + (j << 18) & 0xFF0000);
+        canvas[canvas_index].fillRect(x, y - y_pos, w, h, color);
+      }
+    }
+    canvas[canvas_index].pushSprite(&M5.Display, 0, y_pos);
+    y_pos += canvas[canvas_index].height();
+    canvas_index = 1 - canvas_index;
+  } while (y_pos < M5.Display.height());
 }
 
-void step5()
+void step3()
 {
-  /// 画面端でのテキストの折り返しを無効にする。
-  M5.Display.setTextWrap(false);
-
-  /// テキストのカーソル位置を左上に設定。
-  M5.Display.setCursor(0, 0);
-
-  for (int i = 1; i < 10; ++i)
-  { /// 文字の大きさを変更する。
-    M5.Display.setTextSize(i);
-
-    /// printf関数でテキストを出力する。
-    /// 最後に \n 改行があるので、カーソル位置が次の行の左端に移動する。
-    M5.Display.printf("size%d\n", i);
-  }
+  M5.Display.startWrite();
+  step2();
+  M5.Display.endWrite();
 }
