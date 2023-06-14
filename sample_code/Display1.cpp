@@ -84,8 +84,7 @@ void step2();
 void step3();
 void step4();
 void step5();
-void step6();
-void step7();
+static constexpr int step_max = 5;
 
 void step(int add)
 {
@@ -93,6 +92,12 @@ void step(int add)
 
   /// 引数の指示に応じて実験関数の番号を変更する。
   step += add;
+  if (step < 0) { step = step_max; }
+  if (step > step_max) { step = 0; }
+
+  /// 操作音を鳴らす。
+  float Hz = 880 * powf(2.0, step / 12.0f);
+  M5.Speaker.tone(Hz, 50);
 
   /// 画面描画を高速化するおまじない…。
   /// 描画を終える時に endWrite(); を呼出す。
@@ -104,23 +109,16 @@ void step(int add)
   /// 実験用の関数を順番に試す。
   switch (step)
   {
-  default: step = 0;
+  default:
   case 0: step0(); break;
   case 1: step1(); break;
   case 2: step2(); break;
   case 3: step3(); break;
   case 4: step4(); break;
   case 5: step5(); break;
-  case 6: step6(); break;
-  case -1: step = 7;
-  case 7: step7(); break;
   }
 
   M5_LOGI("step:%d", step);
-
-  /// 操作音を鳴らす。
-  float Hz = 880 * powf(2.0, step / 12.0f);
-  M5.Speaker.tone(Hz, 50);
 
   /// startWriteと対でendWriteを使う。
   /// UnitOLEDや電子ペーパーの場合はここで画面に反映される。
@@ -176,82 +174,31 @@ void step3()
 
 void step4()
 {
-  /// M5Stackの画面の中央に円を描いてみる。
-  /// M5Stackの画面サイズは 320 x 240 なので、
-  /// 中心座標 160,120 に半径120の円を描く。
-  M5.Display.fillCircle(160, 120, 120, TFT_YELLOW);
+  int y = 5;
+  for (int i = 1; i < 10; ++i)
+  { /// 文字の大きさを変更する。
+    M5.Display.setTextSize(i);
+    /// drawString関数でテキストを出力する。
+    /// drawStringはカーソルの影響を受けず、指定した座標に表示される。
+    M5.Display.drawString("hello", 0, y);
+    y += M5.Display.fontHeight();
+  }
 }
 
 void step5()
 {
-  /// step4の方法では、画面サイズが320x240の機種でしか中心に描画されない。
-  /// step5では画面の大きさに基づいて中央に円を描いてみる。
+  /// 画面端でのテキストの折り返しを無効にする。
+  M5.Display.setTextWrap(false);
 
-  /// 画面幅 width の半分を x座標とする。
-  int x = M5.Display.width() / 2;
+  /// テキストのカーソル位置を左上に設定。
+  M5.Display.setCursor(0, 0);
 
-  /// 画面高さ height の半分を y座標とする。
-  int y = M5.Display.height() / 2;
+  for (int i = 1; i < 10; ++i)
+  { /// 文字の大きさを変更する。
+    M5.Display.setTextSize(i);
 
-  /// 円の半径は xとyの小さい方に合わせる。
-  int r = x < y ? x : y;
-
-  M5.Display.fillCircle(x, y, r, TFT_GREEN);
-}
-
-void step6()
-{
-  /// 画面を左右半分に分けて、左右に別の内容を描く。
-  int wid = M5.Display.width() / 2;
-  int hei = M5.Display.height();
-
-  { /// 左半分の描画
-    int x = wid / 2;
-    int y = hei / 2;
-    int r = x < y ? x : y;
-    M5.Display.fillCircle(x, y, r, TFT_YELLOW);
-  }
-
-  { /// 右半分の描画
-    int x = wid / 2;
-    int y = hei / 2;
-    int r = x < y ? x : y;
-    M5.Display.fillCircle(x + wid, y, r, TFT_BLUE);
-  }
-}
-
-void step7()
-{
-  /// step6の方法では、画面サイズが縦長の場合、縦に細長い領域に分割されてしまう。
-  /// step7では画面の大きさに基づいて、なるべく正方形に近い領域に分割する。
-
-  int wid = M5.Display.width();
-  int hei = M5.Display.height();
-  int area2_x = 0;
-  int area2_y = 0;
-
-  if (wid < hei)
-  { /// 画面が縦に長い場合は上下に分割する。
-    hei = hei / 2;
-    area2_y = hei;
-  }
-  else
-  { /// 正方形または横に長い場合は左右に分割する。
-    wid = wid / 2;
-    area2_x = wid;
-  }
-
-  { /// 左半分(または上半分)の描画
-    int x = wid / 2;
-    int y = hei / 2;
-    int r = x < y ? x : y;
-    M5.Display.fillCircle(x, y, r, TFT_RED);
-  }
-
-  { /// 右半分(または下半分)の描画
-    int x = wid / 2;
-    int y = hei / 2;
-    int r = x < y ? x : y;
-    M5.Display.fillCircle(x + area2_x, y + area2_y, r, TFT_CYAN);
+    /// printf関数でテキストを出力する。
+    /// 最後に \n 改行があるので、カーソル位置が次の行の左端に移動する。
+    M5.Display.printf("size%d\n", i);
   }
 }
