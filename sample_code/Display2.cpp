@@ -19,7 +19,7 @@ void setup()
   /// M5Unifiedを使用する準備をする。
   M5.begin(cfg);
 
-  /// 電子ペーパの場合は描画が速いモードに変更する。
+  /// 電子ペーパーの場合は描画が速いモードに変更する。
   M5.Display.setEpdMode(m5gfx::epd_fast);
 
   /// ボタンの長押し判定の時間 (初期値500) を変更したい場合はこの関数で設定する。
@@ -98,6 +98,11 @@ void step(int add)
   /// 操作音を鳴らす。
   float Hz = 880 * powf(2.0, step / 12.0f);
   M5.Speaker.tone(Hz, 50);
+
+  if (M5.Display.isEPD()) {
+    M5.Display.fillScreen(TFT_BLACK);
+    M5.Display.fillScreen(TFT_WHITE);
+  }
 
   /// 画面描画を高速化するおまじない…。
   /// 描画を終える時に endWrite(); を呼出す。
