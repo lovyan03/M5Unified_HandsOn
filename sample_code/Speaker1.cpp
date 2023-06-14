@@ -89,6 +89,7 @@ void step3();
 void step4();
 void step5();
 void step6();
+void step7();
 
 void step(int add)
 {
@@ -96,10 +97,11 @@ void step(int add)
 
   /// 引数の指示に応じて実験関数の番号を変更する。
   step += add;
-  if (step < 0) { step = 6; }
-  if (step > 6) { step = 0; }
+  if (step < 0) { step = 7; }
+  if (step > 7) { step = 0; }
 
   /// 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
+  M5.Display.startWrite();
   M5.Display.fillScreen(M5.Display.isEPD() ? TFT_WHITE : TFT_BLACK);
 
   M5.Display.setCursor(0,0);
@@ -117,10 +119,12 @@ void step(int add)
   case 4: step4(); break;
   case 5: step5(); break;
   case 6: step6(); break;
+  case 7: step7(); break;
   }
   msec = millis() - msec;
 
   M5_LOGI("step:%d   %d msec", step, msec);
+  M5.Display.endWrite();
 }
 
 void step0()
@@ -203,12 +207,25 @@ void step4()
 
 void step5()
 {
+  /// トーンデータ (8bit unsigned の波ひとつ分の生データ)
+  static constexpr const uint8_t wav[64] = { 132,138,143,154,151,139,138,140,144,147,147,147,151,159,184,194,203,222,228,227,210,202,197,181,172,169,177,178,172,151,141,131,107,96,87,77,73,66,42,28,17,10,15,25,55,68,76,82,80,74,61,66,79,107,109,103,81,73,86,94,99,112,121,129 };
+
+  M5.Speaker.tone(523.251, 1000, 1, true, wav, sizeof(wav));
+  delay(200);
+  M5.Speaker.tone(659.255, 1000, 2, true, wav, sizeof(wav));
+  delay(200);
+  M5.Speaker.tone(783.991, 1000, 3, true, wav, sizeof(wav));
+
+  /// 波形データを用意すれば、音色を変更することができる。
+}
+void step6()
+{
   /// ピポッ
   M5.Speaker.tone(2000, 100, 0, true);
   M5.Speaker.tone(1000, 100, 0, false);
 }
 
-void step6()
+void step7()
 {
   /// 音階
   for (int i = 0; i < 60; ++i)
