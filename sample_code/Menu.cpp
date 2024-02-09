@@ -232,7 +232,7 @@ void loop(void)
   }
   { /// 10ミリ秒間隔で処理が進むように待機する。
     static uint32_t prev_ms;
-    uint32_t ms = millis();
+    uint32_t ms = M5.millis();
     int diff = (10 - (ms - prev_ms));
     if (diff > 0)
     {

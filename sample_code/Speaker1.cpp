@@ -107,7 +107,7 @@ void step(int add)
   M5.Display.setCursor(0,0);
   M5.Display.printf("step:%d", step);
 
-  uint32_t msec = millis();
+  uint32_t msec = M5.millis();
   /// 実験用の関数を順番に試す。
   switch (step)
   {
@@ -121,7 +121,7 @@ void step(int add)
   case 6: step6(); break;
   case 7: step7(); break;
   }
-  msec = millis() - msec;
+  msec = M5.millis() - msec;
 
   M5_LOGI("step:%d   %d msec", step, msec);
   M5.Display.endWrite();

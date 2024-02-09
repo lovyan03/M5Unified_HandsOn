@@ -107,7 +107,7 @@ void step(int add)
   /// 画面の表示をクリアする。(電子ペーパの場合は白、それ以外は黒)
   M5.Display.fillScreen(M5.Display.isEPD() ? TFT_WHITE : TFT_BLACK);
 
-  uint32_t msec = millis();
+  uint32_t msec = M5.millis();
   /// 実験用の関数を順番に試す。
   switch (step)
   {
@@ -117,7 +117,7 @@ void step(int add)
   case 2: step2(); break;
   case 3: step3(); break;
   }
-  msec = millis() - msec;
+  msec = M5.millis() - msec;
 
   M5_LOGI("step:%d   %d msec", step, msec);
 }
