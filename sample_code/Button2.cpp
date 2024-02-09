@@ -81,7 +81,7 @@ static int volume = 128;
 
 void loop(void)
 {
-  delay(10);
+  M5.delay(10);
 
   /// ボタンの状態を更新する。
   M5.update();

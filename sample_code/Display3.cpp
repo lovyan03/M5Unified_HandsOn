@@ -79,7 +79,7 @@ void loop(void)
   int h = M5.Display.height();
   if ((++i & 255) == 0)
   {
-    delay(1);
+    M5.delay(1);
   }
 
   for (int x = 0; x < 64; ++x)

@@ -155,12 +155,6 @@ void exec_menu(bool holding)
   }
 }
 
-#if !defined ( ARDUINO )
-void delay(uint32_t msec)
-{
-  vTaskDelay(msec / portTICK_PERIOD_MS);
-}
-#endif
 
 void setup(void)
 {
@@ -243,7 +237,7 @@ void loop(void)
     if (diff > 0)
     {
       ms += diff;
-      delay(diff);
+      M5.delay(diff);
     }
     prev_ms = ms;
   }

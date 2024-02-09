@@ -77,7 +77,7 @@ void loop(void)
   }
   else
   { /// どの操作もされていなければ終了。
-    delay(1);
+    M5.delay(1);
     return;
   }
 

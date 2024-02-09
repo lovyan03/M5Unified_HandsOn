@@ -54,7 +54,7 @@ void loop(void)
     if (diff > 0)
     {
       ms += diff;
-      delay(diff);
+      M5.delay(diff);
     }
     prev_ms = ms;
   }
